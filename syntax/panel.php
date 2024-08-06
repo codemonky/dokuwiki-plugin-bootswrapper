@@ -50,6 +50,12 @@ class syntax_plugin_bootswrapper_panel extends syntax_plugin_bootswrapper_bootst
             'values'   => array(0, 1),
             'required' => false,
             'default'  => false),
+        
+        'no-edit'  => array(
+            'type'     => 'boolean',
+            'values'   => array(0, 1),
+            'required' => false,
+            'default'  => false),
 
     );
 
@@ -67,7 +73,7 @@ class syntax_plugin_bootswrapper_panel extends syntax_plugin_bootswrapper_bootst
         /** @var Doku_Renderer_xhtml $renderer */
         list($state, $match, $pos, $attributes) = $data;
 
-        global $nobody, $footer;
+        global $nobody, $footer, $noedit;
 
         if ($state == DOKU_LEXER_ENTER) {
             $type     = $attributes['type'];
@@ -76,6 +82,7 @@ class syntax_plugin_bootswrapper_panel extends syntax_plugin_bootswrapper_bootst
             $subtitle = (isset($attributes['subtitle']) ? $attributes['subtitle'] : false);
             $icon     = (isset($attributes['icon']) ? $attributes['icon'] : false);
             $nobody   = (isset($attributes['no-body']) ? $attributes['no-body'] : false);
+            $noedit   = (isset($attributes['no-edit']) ? $attributes['no-edit'] : false);
 
             $markup = '<div class="bs-wrap bs-wrap-panel panel panel-' . $type . '">';
 
@@ -93,10 +100,12 @@ class syntax_plugin_bootswrapper_panel extends syntax_plugin_bootswrapper_bootst
                 $markup .= '<div class="panel-body">';
             }
 
-            if (defined('SEC_EDIT_PATTERN')) { // for DokuWiki Greebo and more recent versions
-                $renderer->startSectionEdit($pos, array('target' => 'plugin_bootswrapper_panel', 'name' => $state));
-            } else {
-                $renderer->startSectionEdit($pos, 'plugin_bootswrapper_panel', $state);
+            if (!$noedit) {
+                if (defined('SEC_EDIT_PATTERN')) { // for DokuWiki Greebo and more recent versions
+                    $renderer->startSectionEdit($pos, array('target' => 'plugin_bootswrapper_panel', 'name' => $state));
+                } else {
+                    $renderer->startSectionEdit($pos, 'plugin_bootswrapper_panel', $state);
+                }
             }
 
             $renderer->doc .= $markup;
@@ -118,7 +127,9 @@ class syntax_plugin_bootswrapper_panel extends syntax_plugin_bootswrapper_bootst
             $markup .= '</div>';
             $renderer->doc .= $markup;
 
-            $renderer->finishSectionEdit($pos + strlen($match));
+            if (!$noedit) {
+                $renderer->finishSectionEdit($pos + strlen($match));
+            }
 
             return true;
         }
